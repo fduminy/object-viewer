@@ -1,18 +1,18 @@
 /**
  * ObjectViewer is a tool allowing to search and view elements in a graph of objects.
- * <p>
+ *
  * Copyright (C) 2016-2016 Fabien DUMINY (fabien [dot] duminy [at] webmails [dot] com)
- * <p>
+ *
  * ObjectViewer is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either version 3
  * of the License, or (at your option) any later version.
- * <p>
+ *
  * ObjectViewer is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * <p>
+ *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
@@ -24,6 +24,8 @@ import fr.duminy.objectviewer.api.ObjectLoader;
 import fr.duminy.objectviewer.api.ObjectLoaderService;
 import net.java.sezpoz.Index;
 import org.oxbow.swingbits.table.filter.TableRowFilterSupport;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.event.HyperlinkEvent;
@@ -31,6 +33,7 @@ import javax.swing.event.HyperlinkListener;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumnModel;
 import javax.swing.table.TableModel;
+import javax.swing.text.html.ObjectView;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -39,10 +42,16 @@ import java.util.List;
 import java.util.StringTokenizer;
 import java.util.UUID;
 
+import static com.google.common.base.Strings.nullToEmpty;
+
 /**
  * @author Fabien DUMINY
  */
 public class ObjectViewer {
+    public static final String LOADER_PROPERTY = "loader";
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ObjectView.class);
+
     public static void main(String[] args) throws InstantiationException {
         JComponent contentPane = getTabContent();
         JTabbedPane tabbedPane = new JTabbedPane();
@@ -56,8 +65,23 @@ public class ObjectViewer {
     }
 
     private static <T> JComponent getTabContent() throws InstantiationException {
-        final ObjectLoaderService<T> service = Index.load(ObjectLoader.class, ObjectLoaderService.class).iterator()
-                                                    .next().instance();
+        String loaderClass = nullToEmpty(System.getProperty(LOADER_PROPERTY)).trim();
+        ObjectLoaderService<T> service = null;
+        if (loaderClass != null) {
+            try {
+                service = ObjectLoaderService.class.cast(Class.forName(loaderClass).newInstance());
+            } catch (IllegalAccessException e) {
+                LOGGER.error(e.getMessage(), e);
+            } catch (ClassNotFoundException e) {
+                LOGGER.error(e.getMessage(), e);
+            }
+        }
+
+        if (service == null) {
+            service = Index.load(ObjectLoader.class, ObjectLoaderService.class).iterator()
+                           .next().instance();
+        }
+
         final Class<T> objectsClass = service.getObjectsClass();
         final List<T> values = new ArrayList<T>();
         for (T item : service.loadObjects()) {
@@ -80,7 +104,7 @@ public class ObjectViewer {
                 int row = table.rowAtPoint(e.getPoint());
                 if ((column >= 0) && (row >= 0)) {
                     Object value = table.getValueAt(row, column);
-                    System.out.println("value=" + value);
+                    LOGGER.info("value={}", value);
                 }
             }
         });

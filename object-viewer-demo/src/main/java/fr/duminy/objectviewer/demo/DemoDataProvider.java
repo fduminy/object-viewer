@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
  * USA.
  */
-package fr.duminy.objectviewer.spi;
+package fr.duminy.objectviewer.demo;
 
 import fr.duminy.objectviewer.api.ObjectLoader;
 import fr.duminy.objectviewer.api.ObjectLoaderService;
@@ -32,7 +32,7 @@ import java.util.UUID;
  * @author Fabien DUMINY
  */
 @ObjectLoader
-public class SerializableProvider implements ObjectLoaderService<SerializableProvider.TestObject> {
+public class DemoDataProvider implements ObjectLoaderService<DemoDataProvider.TestObject> {
     public Iterable<TestObject> loadObjects() {
         return Arrays.<TestObject>asList(
             new TestObject("111-111-111-111-111", Arrays.asList("333-333-333-333-333", "444-444-444-444-444"),
