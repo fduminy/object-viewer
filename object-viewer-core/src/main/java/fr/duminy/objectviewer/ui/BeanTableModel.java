@@ -21,6 +21,8 @@
 package fr.duminy.objectviewer.ui;
 
 import com.google.common.collect.Iterables;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.table.AbstractTableModel;
 import java.lang.reflect.InvocationTargetException;
@@ -37,13 +39,15 @@ import static org.reflections.ReflectionUtils.*;
  * @author Fabien DUMINY
  */
 class BeanTableModel<T> extends AbstractTableModel {
-    private final SortedSet<Method> getters;
-    private final List<T> values;
+    private static final Logger LOGGER = LoggerFactory.getLogger(BeanTableModel.class);
 
-    public BeanTableModel(Class<T> objectsClass, List<T> values) {
+    private final transient SortedSet<Method> getters;
+    private final transient List<T> values;
+
+    @SuppressWarnings("unchecked") BeanTableModel(Class<T> objectsClass, List<T> values) {
         this.values = values;
         getters = new TreeSet<Method>(new Comparator<Method>() {
-
+            @Override
             public int compare(Method o1, Method o2) {
                 return o1.getName().compareTo(o2.getName());
             }
@@ -52,10 +56,12 @@ class BeanTableModel<T> extends AbstractTableModel {
             getAllMethods(objectsClass, withModifier(Modifier.PUBLIC), withPrefix("get"), withParametersCount(0)));
     }
 
+    @Override
     public int getRowCount() {
         return values.size();
     }
 
+    @Override
     public int getColumnCount() {
         return getters.size();
     }
@@ -72,14 +78,15 @@ class BeanTableModel<T> extends AbstractTableModel {
         return Iterables.get(getters, column).getName().substring(3);
     }
 
+    @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
         try {
             return Iterables.get(getters, columnIndex).invoke(values.get(rowIndex));
         } catch (IllegalAccessException e) {
-            e.printStackTrace();
+            LOGGER.error(e.getMessage(), e);
             return null;
         } catch (InvocationTargetException e) {
-            e.printStackTrace();
+            LOGGER.error(e.getMessage(), e);
             return null;
         }
     }
