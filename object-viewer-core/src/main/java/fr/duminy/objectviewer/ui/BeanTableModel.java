@@ -27,12 +27,12 @@ import org.slf4j.LoggerFactory;
 import javax.swing.table.AbstractTableModel;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.Comparator;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import static java.lang.reflect.Modifier.PUBLIC;
 import static org.reflections.ReflectionUtils.*;
 
 /**
@@ -40,30 +40,55 @@ import static org.reflections.ReflectionUtils.*;
  */
 class BeanTableModel<T> extends AbstractTableModel {
     private static final Logger LOGGER = LoggerFactory.getLogger(BeanTableModel.class);
+    private static final Comparator<Method> METHOD_COMPARATOR = new Comparator<Method>() {
+        @Override
+        public int compare(Method o1, Method o2) {
+            return o1.getName().compareTo(o2.getName());
+        }
+    };
 
-    private final transient SortedSet<Method> getters;
-    private final transient List<T> values;
+    private final transient Class<?>[] columnClasses;
+    private final transient String[] columnNames;
+    private final transient Object[][] values;
+    private final transient int columnCount;
+    private final transient int rowCount;
 
-    @SuppressWarnings("unchecked") BeanTableModel(Class<T> baseClass, List<T> values) {
-        this.values = values;
-        getters = new TreeSet<Method>(new Comparator<Method>() {
-            @Override
-            public int compare(Method o1, Method o2) {
-                return o1.getName().compareTo(o2.getName());
+    @SuppressWarnings("unchecked") BeanTableModel(Class<T> baseClass, List<T> beans) {
+        SortedSet<Method> getters = new TreeSet<Method>(METHOD_COMPARATOR);
+        getters.addAll(getAllMethods(baseClass, withModifier(PUBLIC), withPrefix("get"), withParametersCount(0)));
+
+        rowCount = beans.size();
+        columnCount = getters.size();
+        columnClasses = new Class<?>[columnCount];
+        columnNames = new String[columnCount];
+        values = new Object[columnCount][];
+        for (int columnIndex = 0; columnIndex < columnCount; columnIndex++) {
+            Method method = Iterables.get(getters, columnIndex);
+            columnClasses[columnIndex] = method.getReturnType();
+            columnNames[columnIndex] = method.getName().substring(3);
+
+            Object[] columnValues = new Object[rowCount];
+            values[columnIndex] = columnValues;
+            for (int rowIndex = 0; rowIndex < rowCount; rowIndex++) {
+                try {
+                    columnValues[rowIndex] = method.invoke(beans.get(rowIndex));
+                } catch (IllegalAccessException e) {
+                    LOGGER.error(e.getMessage(), e);
+                } catch (InvocationTargetException e) {
+                    LOGGER.error(e.getMessage(), e);
+                }
             }
-        });
-        getters.addAll(
-            getAllMethods(baseClass, withModifier(Modifier.PUBLIC), withPrefix("get"), withParametersCount(0)));
+        }
     }
 
     @Override
     public int getRowCount() {
-        return values.size();
+        return rowCount;
     }
 
     @Override
     public int getColumnCount() {
-        return getters.size();
+        return columnCount;
     }
 
     @Override public boolean isCellEditable(int rowIndex, int columnIndex) {
@@ -71,23 +96,15 @@ class BeanTableModel<T> extends AbstractTableModel {
     }
 
     @Override public Class<?> getColumnClass(int columnIndex) {
-        return Iterables.get(getters, columnIndex).getReturnType();
+        return columnClasses[columnIndex];
     }
 
-    @Override public String getColumnName(int column) {
-        return Iterables.get(getters, column).getName().substring(3);
+    @Override public String getColumnName(int columnIndex) {
+        return columnNames[columnIndex];
     }
 
     @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
-        try {
-            return Iterables.get(getters, columnIndex).invoke(values.get(rowIndex));
-        } catch (IllegalAccessException e) {
-            LOGGER.error(e.getMessage(), e);
-            return null;
-        } catch (InvocationTargetException e) {
-            LOGGER.error(e.getMessage(), e);
-            return null;
-        }
+        return values[columnIndex][rowIndex];
     }
 }
