@@ -33,7 +33,6 @@ import javax.swing.event.HyperlinkListener;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumnModel;
 import javax.swing.table.TableModel;
-import javax.swing.text.html.ObjectView;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -50,7 +49,7 @@ import static com.google.common.base.Strings.nullToEmpty;
 public class ObjectViewer {
     public static final String LOADER_PROPERTY = "loader";
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ObjectView.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ObjectViewer.class);
 
     public static void main(String[] args) throws InstantiationException {
         JComponent contentPane = getTabContent();
@@ -82,20 +81,20 @@ public class ObjectViewer {
                            .next().instance();
         }
 
-        final Class<T> objectsClass = service.getObjectsClass();
+        final Class<T> baseClass = service.getBaseClass();
         final List<T> values = new ArrayList<T>();
         for (T item : service.loadObjects()) {
             values.add(item);
         }
-        JComponent component = buildTableModel(values, objectsClass);
-        component.setName(objectsClass.getSimpleName());
+        JComponent component = buildTableModel(values, baseClass);
+        component.setName(baseClass.getSimpleName());
         return component;
     }
 
     @SuppressWarnings("unchecked")
-    private static <T> JComponent buildTableModel(final List<T> values, final Class<T> objectsClass)
+    private static <T> JComponent buildTableModel(final List<T> values, final Class<T> baseClass)
         throws InstantiationException {
-        TableModel tableModel = new BeanTableModel(objectsClass, values);
+        TableModel tableModel = new BeanTableModel(baseClass, values);
         final JTable table = new JTable(tableModel);
         table.addMouseListener(new MouseAdapter() {
             @Override public void mouseClicked(MouseEvent e) {

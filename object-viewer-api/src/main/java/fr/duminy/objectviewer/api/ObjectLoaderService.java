@@ -24,7 +24,7 @@ package fr.duminy.objectviewer.api;
  * @author Fabien DUMINY
  */
 public interface ObjectLoaderService<T> {
-    Class<T> getObjectsClass();
+    Class<T> getBaseClass();
 
     Iterable<T> loadObjects();
 }

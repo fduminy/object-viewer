@@ -44,7 +44,7 @@ class BeanTableModel<T> extends AbstractTableModel {
     private final transient SortedSet<Method> getters;
     private final transient List<T> values;
 
-    @SuppressWarnings("unchecked") BeanTableModel(Class<T> objectsClass, List<T> values) {
+    @SuppressWarnings("unchecked") BeanTableModel(Class<T> baseClass, List<T> values) {
         this.values = values;
         getters = new TreeSet<Method>(new Comparator<Method>() {
             @Override
@@ -53,7 +53,7 @@ class BeanTableModel<T> extends AbstractTableModel {
             }
         });
         getters.addAll(
-            getAllMethods(objectsClass, withModifier(Modifier.PUBLIC), withPrefix("get"), withParametersCount(0)));
+            getAllMethods(baseClass, withModifier(Modifier.PUBLIC), withPrefix("get"), withParametersCount(0)));
     }
 
     @Override

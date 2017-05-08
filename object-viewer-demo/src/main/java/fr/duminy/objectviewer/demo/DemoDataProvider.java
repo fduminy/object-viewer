@@ -40,7 +40,7 @@ public class DemoDataProvider implements ObjectLoaderService<DemoDataProvider.Te
             new TestObject("222-222-222-222-222", Arrays.asList("555-555-555-555-555"), "value2"));
     }
 
-    public Class<TestObject> getObjectsClass() {
+    public Class<TestObject> getBaseClass() {
         return TestObject.class;
     }
 

@@ -68,7 +68,7 @@ public class SerializableProvider implements ObjectLoaderService<Object> {
     }
 
     @Override
-    public Class<Object> getObjectsClass() {
+    public Class<Object> getBaseClass() {
         return Object.class;
     }
 }
