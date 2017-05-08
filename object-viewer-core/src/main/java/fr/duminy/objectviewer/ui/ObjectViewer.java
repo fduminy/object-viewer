@@ -22,7 +22,6 @@ package fr.duminy.objectviewer.ui;
 
 import fr.duminy.objectviewer.api.ObjectLoader;
 import fr.duminy.objectviewer.api.ObjectLoaderService;
-import net.java.sezpoz.Index;
 import org.oxbow.swingbits.table.filter.TableRowFilterSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +41,9 @@ import java.util.StringTokenizer;
 import java.util.UUID;
 
 import static com.google.common.base.Strings.nullToEmpty;
+import static java.lang.System.getProperty;
+import static javax.swing.WindowConstants.EXIT_ON_CLOSE;
+import static net.java.sezpoz.Index.load;
 
 /**
  * @author Fabien DUMINY
@@ -60,25 +62,22 @@ public class ObjectViewer {
         frame.setSize(Toolkit.getDefaultToolkit().getScreenSize());
         frame.setContentPane(tabbedPane);
         frame.setVisible(true);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setDefaultCloseOperation(EXIT_ON_CLOSE);
     }
 
-    private static <T> JComponent getTabContent() throws InstantiationException {
-        String loaderClass = nullToEmpty(System.getProperty(LOADER_PROPERTY)).trim();
+    @SuppressWarnings("unchecked") private static <T> JComponent getTabContent() throws InstantiationException {
+        String loaderClass = nullToEmpty(getProperty(LOADER_PROPERTY)).trim();
         ObjectLoaderService<T> service = null;
-        if (loaderClass != null) {
-            try {
-                service = ObjectLoaderService.class.cast(Class.forName(loaderClass).newInstance());
-            } catch (IllegalAccessException e) {
-                LOGGER.error(e.getMessage(), e);
-            } catch (ClassNotFoundException e) {
-                LOGGER.error(e.getMessage(), e);
-            }
+        try {
+            service = ObjectLoaderService.class.cast(Class.forName(loaderClass).newInstance());
+        } catch (IllegalAccessException e) {
+            LOGGER.error(e.getMessage(), e);
+        } catch (ClassNotFoundException e) {
+            LOGGER.error(e.getMessage(), e);
         }
 
         if (service == null) {
-            service = Index.load(ObjectLoader.class, ObjectLoaderService.class).iterator()
-                           .next().instance();
+            service = load(ObjectLoader.class, ObjectLoaderService.class).iterator().next().instance();
         }
 
         final Class<T> baseClass = service.getBaseClass();
