@@ -1,7 +1,7 @@
 /**
  * ObjectViewer is a tool allowing to search and view elements in a graph of objects.
  *
- * Copyright (C) 2016-2016 Fabien DUMINY (fabien [dot] duminy [at] webmails [dot] com)
+ * Copyright (C) 2016-2017 Fabien DUMINY (fabien [dot] duminy [at] webmails [dot] com)
  *
  * ObjectViewer is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
